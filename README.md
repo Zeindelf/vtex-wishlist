@@ -1,2 +1,2 @@
-# vtex-wishlist
+# VtexWishlist
 Wishlist for Vtex stores
