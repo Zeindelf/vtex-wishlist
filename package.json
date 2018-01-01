@@ -1,6 +1,6 @@
 {
   "name": "vtex-wishlist",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Wishlist for Vtex stores",
   "scripts": {
     "dev": "gulp --colors && gulp watch --colors",
@@ -9,19 +9,17 @@
   },
   "main": "dist/vtex-wishlist.min.js",
   "repository": {
-      "type": "git",
-      "url": "https://github.com/zeindelf/vtex-wishlist"
+    "type": "git",
+    "url": "https://github.com/zeindelf/vtex-wishlist"
   },
   "keywords": [
-      "vtex",
-      "wishlist",
-      "rivets",
-      "dom-binding"
+    "vtex",
+    "wishlist"
   ],
   "author": {
-      "name": "Wellington Barreto",
-      "email": "zeindelf@hotmail.com",
-      "homepage": "https://www.zeindelf.com"
+    "name": "Wellington Barreto",
+    "email": "zeindelf@hotmail.com",
+    "homepage": "https://www.zeindelf.com"
   },
   "license": "MIT",
   "devDependencies": {
