@@ -146,14 +146,10 @@ class Private {
     _clearWishlist() {
         $(document).on('click', '[data-wishlist-clear]', (ev) => {
             ev.preventDefault();
-            // const $this = $(ev.currentTarget);
             const $wishlistAdd = $(document).find('[data-wishlist-add]');
             const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
 
             if ( storeVal.productsId.length < 1 ) {
-                // $this.addClass(this._self.options.inactiveClass)
-                //     .prop('disabled', true);
-
                 return false;
             }
 
@@ -287,7 +283,7 @@ class Private {
         this._beforeShowItemsEvent();
 
         if ( storeVal.productsId.length < 1 ) {
-            $wishlistOrder.addClass(this._self.options.inactiveClass);
+            $('body').addClass(this._self.options.inactiveClass);
             $wishlistItems.empty().append(this._self.options.notFound);
 
             this._afterShowItemsEvent();
@@ -296,7 +292,7 @@ class Private {
         }
 
         this._vtexCatalog.searchPage(params, splitList).then((res) => {
-            $wishlistOrder.removeClass(this._self.options.inactiveClass);
+            $('body').removeClass(this._self.options.inactiveClass);
             $wishlistItems.empty().append($wishlistContainer.append(res));
 
             this._storageObserve();
