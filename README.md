@@ -1,2 +1,3 @@
-# VtexWishlist.js
-Wishlist for Vtex stores
+# VtexAutocomplete
+
+Vtex Search Autocomplete

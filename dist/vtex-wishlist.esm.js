@@ -9,12 +9,6 @@
  * Date: 2018-03-11T23:57:20.681Z
  */
 
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.VTEX = global.VTEX || {}, global.VTEX.VtexWishlist = factory());
-}(this, (function () { 'use strict';
-
 var vtexUtilsVersion = '1.1.0';
 
 var CONSTANTS = {
@@ -706,6 +700,4 @@ var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog)
   this.globalHelpers.extend(VtexWishlist.prototype, vtexWishlistMethods);
 };
 
-return VtexWishlist;
-
-})));
+export default VtexWishlist;
