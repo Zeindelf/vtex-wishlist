@@ -1,6 +1,6 @@
 {
   "name": "vtex-wishlist",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Vtex wishlist",
   "main": "dist/vtex-wishlist.common.js",
   "module": "dist/vtex-wishlist.esm.js",

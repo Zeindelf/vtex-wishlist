@@ -19,13 +19,13 @@ class Private {
      */
     _initStorage() {
         const sessionOptions = {
-            userDefined: false
+            userDefined: false,
         };
 
         const storageOptions = {
             userEmail: null,
             userId: null,
-            productsId: []
+            productsId: [],
         };
 
         if ( this._globalHelpers.isNull(this._storage.get(CONSTANTS.STORAGE_NAME)) ) {
@@ -57,7 +57,7 @@ class Private {
                 this._setWishlistUser();
                 this._vtexHelpers.openPopupLogin(true);
 
-                return false
+                return false;
             }
 
             if ( ! this._checkUserEmail() ) {
@@ -146,7 +146,7 @@ class Private {
     _clearWishlist() {
         $(document).on('click', '[data-wishlist-clear]', (ev) => {
             ev.preventDefault();
-            const $this = $(ev.currentTarget);
+            // const $this = $(ev.currentTarget);
             const $wishlistAdd = $(document).find('[data-wishlist-add]');
             const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
 
@@ -247,7 +247,9 @@ class Private {
         const sessionVal = this._session.get(CONSTANTS.SESSION_NAME);
         const response = {hasUser: false, userData: null};
 
+        /* eslint-disable */
         return $.Deferred((def) => {
+            /* eslint-enable */
             if ( sessionVal.userDefined ) {
                 return false;
             }
@@ -273,7 +275,7 @@ class Private {
     _renderProducts(order = null) {
         const $wishlistItems = $('[data-wishlist-items');
         const $wishlistOrder = $('[data-wishlist-order]');
-        const $wishlistContainer = $('<ul class="vw-wishlist__items"></ul>')
+        const $wishlistContainer = $('<ul class="vw-wishlist__items"></ul>');
         const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
         const splitList = true;
         const params = {

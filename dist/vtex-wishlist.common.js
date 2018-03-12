@@ -1,17 +1,17 @@
 
 /*!!
- * VtexWishlist.js v0.0.1
+ * VtexWishlist.js v0.1.0
  * https://github.com/zeindelf/vtex-wishlist
  *
  * Copyright (c) 2017-2018 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-03-11T23:57:20.681Z
+ * Date: 2018-03-12T06:34:24.578Z
  */
 
 'use strict';
 
-var vtexUtilsVersion = '1.1.0';
+var vtexUtilsVersion = '1.2.0';
 
 var CONSTANTS = {
     DELAY_TIME: 150, // Miliseconds
@@ -24,7 +24,6 @@ var CONSTANTS = {
         vtexUtilsVersionMessage: 'VtexUtils version must be higher than ' + vtexUtilsVersion + '. Download last version on https://www.npmjs.com/package/vtex-utils',
         vtexMasterdata: 'VtexMasterdata.js is required. Download it from https://www.npmjs.com/package/vtex-masterdata',
         storeName: 'The option \'storeName\' is required and must be a string.',
-        wishlistEntity: 'The option \'wishlistEntity\' is required and must be a string.',
         shelfId: 'The option \'shelfId\' is required and must be a string.',
         notFound: 'The option \'notFound\' must be a function.'
     }
@@ -241,7 +240,7 @@ var Private = function () {
 
             $(document).on('click', '[data-wishlist-clear]', function (ev) {
                 ev.preventDefault();
-                var $this = $(ev.currentTarget);
+                // const $this = $(ev.currentTarget);
                 var $wishlistAdd = $(document).find('[data-wishlist-add]');
                 var storeVal = _this4._storage.get(CONSTANTS.STORAGE_NAME);
 
@@ -361,7 +360,9 @@ var Private = function () {
             var sessionVal = this._session.get(CONSTANTS.SESSION_NAME);
             var response = { hasUser: false, userData: null };
 
+            /* eslint-disable */
             return $.Deferred(function (def) {
+                /* eslint-enable */
                 if (sessionVal.userDefined) {
                     return false;
                 }
@@ -630,6 +631,11 @@ var vtexWishlistMethods = {
         _private._renderProducts();
     }
 };
+
+/**
+ * Create a VtexWishlist class
+ * Vtex utilities methods
+ */
 
 var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog) {
   var catalogCache = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;

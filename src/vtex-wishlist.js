@@ -12,7 +12,7 @@ class VtexWishlist {
          * Version
          * @type {String}
          */
-        this.version = '0.0.1';
+        this.version = '0.1.0';
 
         /**
          * Package name
