@@ -270,7 +270,6 @@ class Private {
      */
     _renderProducts(order = null) {
         const $wishlistItems = $('[data-wishlist-items');
-        const $wishlistOrder = $('[data-wishlist-order]');
         const $wishlistContainer = $('<ul class="vw-wishlist__items"></ul>');
         const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
         const splitList = true;

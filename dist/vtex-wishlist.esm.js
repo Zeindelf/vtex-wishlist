@@ -1,12 +1,12 @@
 
 /*!!
- * VtexWishlist.js v0.1.0
+ * VtexWishlist.js v0.1.1
  * https://github.com/zeindelf/vtex-wishlist
  *
  * Copyright (c) 2017-2018 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-03-12T06:34:24.578Z
+ * Date: 2018-03-12T17:53:33.148Z
  */
 
 var vtexUtilsVersion = '1.2.0';
@@ -238,14 +238,10 @@ var Private = function () {
 
             $(document).on('click', '[data-wishlist-clear]', function (ev) {
                 ev.preventDefault();
-                // const $this = $(ev.currentTarget);
                 var $wishlistAdd = $(document).find('[data-wishlist-add]');
                 var storeVal = _this4._storage.get(CONSTANTS.STORAGE_NAME);
 
                 if (storeVal.productsId.length < 1) {
-                    // $this.addClass(this._self.options.inactiveClass)
-                    //     .prop('disabled', true);
-
                     return false;
                 }
 
@@ -392,7 +388,6 @@ var Private = function () {
             var order = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
             var $wishlistItems = $('[data-wishlist-items');
-            var $wishlistOrder = $('[data-wishlist-order]');
             var $wishlistContainer = $('<ul class="vw-wishlist__items"></ul>');
             var storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
             var splitList = true;
@@ -405,7 +400,7 @@ var Private = function () {
             this._beforeShowItemsEvent();
 
             if (storeVal.productsId.length < 1) {
-                $wishlistOrder.addClass(this._self.options.inactiveClass);
+                $('body').addClass(this._self.options.inactiveClass);
                 $wishlistItems.empty().append(this._self.options.notFound);
 
                 this._afterShowItemsEvent();
@@ -414,7 +409,7 @@ var Private = function () {
             }
 
             this._vtexCatalog.searchPage(params, splitList).then(function (res) {
-                $wishlistOrder.removeClass(_this9._self.options.inactiveClass);
+                $('body').removeClass(_this9._self.options.inactiveClass);
                 $wishlistItems.empty().append($wishlistContainer.append(res));
 
                 _this9._storageObserve();
@@ -643,7 +638,7 @@ var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog)
    * Version
    * @type {String}
    */
-  this.version = '0.1.0';
+  this.version = '0.1.1';
 
   /**
    * Package name
