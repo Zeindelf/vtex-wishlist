@@ -1,3 +1,3 @@
-# VtexAutocomplete
+# VtexWishlist
 
-Vtex Search Autocomplete
+Wishlist for Vtex stores
