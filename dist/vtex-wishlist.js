@@ -6,7 +6,7 @@
  * Copyright (c) 2017-2018 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-03-12T17:53:33.148Z
+ * Date: 2018-03-18T22:08:24.192Z
  */
 
 (function (global, factory) {
@@ -19,8 +19,8 @@ var vtexUtilsVersion = '1.2.0';
 
 var CONSTANTS = {
     DELAY_TIME: 150, // Miliseconds
-    STORAGE_NAME: '__vtexWishlist.attributes__',
-    SESSION_NAME: '__vtexWishlist.session__',
+    STORAGE_NAME: '_vw_attributes',
+    SESSION_NAME: '_vw_session',
     RETRIEVED_DATA: ['wishlistProducts'],
     MESSAGES: {
         vtexUtils: 'VtexUtils.js is required and must be an instance. Download it from https://www.npmjs.com/package/vtex-utils',
@@ -29,21 +29,156 @@ var CONSTANTS = {
         vtexMasterdata: 'VtexMasterdata.js is required. Download it from https://www.npmjs.com/package/vtex-masterdata',
         storeName: 'The option \'storeName\' is required and must be a string.',
         shelfId: 'The option \'shelfId\' is required and must be a string.',
-        notFound: 'The option \'notFound\' must be a function.'
-    }
+        notFound: 'The option \'notFound\' must be a function.',
+        wishlistItems: 'You\'ll need declare an container with data attribute \'<div data-wishlist-items=""></div>\' to append your list.'
+    },
+    EVENTS: {
+        REQUEST_START: 'requestStart.vtexWishlist',
+        REQUEST_ADD_START: 'requestAddStart.vtexWishlist',
+        REQUEST_REMOVE_START: 'requestRemoveStart.vtexWishlist',
+        REQUEST_END: 'requestEnd.vtexWishlist',
+        REQUEST_ADD_END: 'requestAddEnd.vtexWishlist',
+        REQUEST_REMOVE_END: 'requestRemoveEnd.vtexWishlist',
+        BEFORE_SHOW_ITEMS: 'beforeShowItems.vtexWishlist',
+        AFTER_SHOW_ITEMS: 'afterShowItems.vtexWishlist',
+        BEFORE_ORDER_BY_ITEMS: 'beforeOrderByItems.vtexWishlist',
+        AFTER_ORDER_BY_ITEMS: 'afterOrderByItems.vtexWishlist',
+        BEFORE_CLEAR_ITEMS: 'beforeClearItems.vtexWishlist',
+        AFTER_CLEAR_ITEMS: 'afterClearItems.vtexWishlist'
+    },
+    BODY: $('body')
 };
 
 var DEFAULTS = {
-    activeClass: 'is--active',
-    inactiveClass: 'is--inactive',
-    loaderClass: 'has--wishlist-loader',
+    orderBy: 'OrderByPriceASC',
+    notFound: null,
+    zeroPadding: false,
+
+    perPage: 12,
+
     linkTitle: {
         add: 'Adicionar a wishlist',
         remove: 'Remover da wishlist'
     },
-    order: 'OrderByPriceASC',
-    notFound: null,
-    zeroPadding: false
+
+    activeClass: 'is--active',
+    emptyClass: 'is--wishlist-empty',
+    loaderClass: 'has--wishlist-loader',
+    itemsClass: 'vw-items',
+    itemClass: 'vw-item',
+
+    orderByBodyClass: 'has--wishlist-order-by',
+
+    loadMoreBodyClass: 'has--wishlist-load-more',
+    loadMoreWrapperClass: 'vw-load-more-wrapper',
+    loadMoreBtnClass: 'vw-load-more-btn',
+    loadMoreText: 'Carregar mais'
+};
+
+var renderProducts = {
+    /**
+     * Render Wishlist products
+     * @param  {Number} page Get specific page
+     *
+     * @example
+     *     // The element to receive data may be a empty list with data attribute 'data-wishlist-items'
+     *     <ul class="wishlist__items" data-wishlist-items="data-wishlist-items"></ul>
+     */
+    _renderProducts: function _renderProducts() {
+        var _this = this;
+
+        var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+
+        var $wishlistItems = $('[data-wishlist-items]');
+        var storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
+        var splitList = true;
+        var params = {
+            quantity: this._self.options.perPage * page,
+            fq: storeVal.productsId,
+            shelfId: this._self.options.shelfId,
+            order: this._self.options.orderBy
+        };
+
+        if ($wishlistItems.length < 1) {
+            // Container doesn't exists
+            throw new Error(CONSTANTS.MESSAGES.wishlistItems);
+        }
+
+        $(document).trigger(CONSTANTS.EVENTS.BEFORE_SHOW_ITEMS);
+
+        if (storeVal.productsId.length < 1) {
+            this._setEmptyAttr($wishlistItems);
+            return false;
+        }
+
+        this._vtexCatalog.searchPage(params, splitList).then(function ($item) {
+            if ($item.length < 1) {
+                _this._setEmptyAttr($wishlistItems);
+                return false;
+            }
+
+            $item.removeClass('first last').addClass(_this._self.options.itemClass);
+
+            _this._removeEmptyClass();
+
+            $wishlistItems.empty().append($item);
+
+            _this._storageObserve();
+        }).fail(function (err) {
+            return window.console.log(err);
+        }).always(function () {
+            _this._removeLoadMoreClass();
+
+            $(document).trigger(CONSTANTS.EVENTS.AFTER_SHOW_ITEMS);
+        });
+    },
+
+
+    /**
+     * Change order
+     *
+     * @example
+     *     <nav class="wishlist__order" data-wishlist-order="data-wishlist-order-by">
+     *         <label><span>Menor Preço</span>
+     *             <input name="orderby" type="radio" value="OrderByPriceASC"/>
+     *         </label>
+     *         <!-- More Options... -->
+     *     </nav>
+     */
+    _changeOrder: function _changeOrder() {
+        var _this2 = this;
+
+        var $wishlistOrderBy = $('[data-wishlist-order-by]');
+
+        $wishlistOrderBy.find('input').on('change', function (ev) {
+            ev.preventDefault();
+
+            var $this = $(ev.currentTarget);
+            var value = $this.val();
+
+            $(document).trigger(CONSTANTS.EVENTS.BEFORE_ORDER_BY_ITEMS);
+
+            _this2._addOrderByClass();
+            _this2._resetLoadMoreBtn();
+            _this2._setUrlHash();
+
+            $this.parent('label').addClass(_this2._self.options.activeClass);
+            $this.parent('label').siblings().removeClass(_this2._self.options.activeClass);
+            _this2._self.options.orderBy = value;
+            _this2._renderProducts();
+
+            $(document).one('afterShowItems.vtexWishlist', function (ev) {
+                $(document).trigger(CONSTANTS.EVENTS.AFTER_ORDER_BY_ITEMS);
+                _this2._removeOrderByClass();
+            });
+        });
+    },
+    _setEmptyAttr: function _setEmptyAttr($wishlistItems) {
+        this._addEmptyClass();
+        $wishlistItems.empty().append(this._self.options.notFound);
+
+        $(document).trigger(CONSTANTS.EVENTS.AFTER_SHOW_ITEMS);
+    }
 };
 
 var classCallCheck = function (instance, Constructor) {
@@ -70,6 +205,121 @@ var createClass = function () {
   };
 }();
 
+
+
+
+
+var defineProperty = function (obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+};
+
+var pagination = {
+    _splitPages: function _splitPages() {
+        var storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
+        var chunkItems = this._globalHelpers.chunk(storeVal.productsId, this._self.options.perPage);
+
+        storeVal.pagination.totalPages = chunkItems.length;
+        storeVal.pagination.perPage = this._self.options.perPage;
+
+        this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
+    },
+
+
+    // TODO: Create Pagination
+
+    _createLoadMore: function _createLoadMore() {
+        var _$;
+
+        var storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
+        var $loadMoreWrapper = $('<div />', { class: this._self.options.loadMoreWrapperClass });
+        var $loadMoreBtn = $('<button />', (_$ = {
+            class: this._self.options.loadMoreBtnClass
+        }, defineProperty(_$, 'data-wishlist-page', 2), defineProperty(_$, 'data-wishlist-load-more-btn', 'data-wishlist-load-more-btn'), _$)).text(this._self.options.loadMoreText);
+
+        $loadMoreWrapper.append($loadMoreBtn);
+        $loadMoreWrapper.insertAfter('[data-wishlist-items]');
+    },
+    _loadMoreActions: function _loadMoreActions() {
+        var _this = this;
+
+        $(document).on('click', '[data-wishlist-load-more-btn]', function (ev) {
+            ev.preventDefault();
+
+            var storeVal = _this._storage.get(CONSTANTS.STORAGE_NAME);
+            var $this = $(ev.currentTarget);
+            var page = $this.data('wishlistPage');
+            var newPage = page + 1;
+
+            _this._addLoadMoreClass();
+
+            if (page >= storeVal.pagination.totalPages) {
+                $this.hide();
+            }
+
+            _this._setUrlHash(page);
+            _this._renderProducts(page);
+            $this.data('wishlistPage', newPage);
+        });
+    },
+    _setLoadMoreBtn: function _setLoadMoreBtn() {
+        var storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
+        var $loadMoreBtn = $(document).find('[data-wishlist-load-more-btn]');
+
+        if (storeVal.pagination.page >= storeVal.pagination.totalPages) {
+            $loadMoreBtn.hide();
+        } else {
+            $loadMoreBtn.show();
+        }
+    },
+    _resetLoadMoreBtn: function _resetLoadMoreBtn() {
+        var $loadMoreBtn = $(document).find('[data-wishlist-load-more-btn]');
+        $loadMoreBtn.data('wishlistPage', 2);
+    },
+    _setUrlHash: function _setUrlHash(page) {
+        var storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
+        var pageNumber = typeof page !== 'undefined' ? page : 1;
+
+        storeVal.pagination.page = pageNumber;
+        window.location.hash = pageNumber;
+        this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
+    }
+};
+
+var utils = {
+    _setPadding: function _setPadding(qty) {
+        return this._self.options.zeroPadding ? this._self.globalHelpers.pad(qty) : qty;
+    },
+    _addEmptyClass: function _addEmptyClass() {
+        CONSTANTS.BODY.addClass(this._self.options.emptyClass);
+    },
+    _removeEmptyClass: function _removeEmptyClass() {
+        CONSTANTS.BODY.removeClass(this._self.options.emptyClass);
+    },
+    _addLoadMoreClass: function _addLoadMoreClass() {
+        CONSTANTS.BODY.addClass(this._self.options.loadMoreBodyClass);
+    },
+    _removeLoadMoreClass: function _removeLoadMoreClass() {
+        CONSTANTS.BODY.removeClass(this._self.options.loadMoreBodyClass);
+    },
+    _addOrderByClass: function _addOrderByClass() {
+        CONSTANTS.BODY.addClass(this._self.options.orderByBodyClass);
+    },
+    _removeOrderByClass: function _removeOrderByClass() {
+        CONSTANTS.BODY.removeClass(this._self.options.orderByBodyClass);
+    }
+};
+
 var Private = function () {
     function Private() {
         classCallCheck(this, Private);
@@ -86,6 +336,8 @@ var Private = function () {
 
             this._storage = self.storage;
             this._session = self.storage.session;
+
+            this._globalHelpers.extend(Private.prototype, utils, renderProducts, pagination);
         }
 
         /**
@@ -103,7 +355,12 @@ var Private = function () {
             var storageOptions = {
                 userEmail: null,
                 userId: null,
-                productsId: []
+                productsId: [],
+                pagination: {
+                    page: 1,
+                    perPage: this._self.options.perPage,
+                    totalPages: 1
+                }
             };
 
             if (this._globalHelpers.isNull(this._storage.get(CONSTANTS.STORAGE_NAME))) {
@@ -117,7 +374,7 @@ var Private = function () {
 
         /**
          * **********************************************
-         * SET PRODUCTS ACTIONS
+         * SET WISHLIST ACTIONS
          * **********************************************
          */
 
@@ -135,8 +392,8 @@ var Private = function () {
                 // Validate Session Ended / Local persisted
                 var storeVal = _this._storage.get(CONSTANTS.STORAGE_NAME);
                 var sessionVal = _this._session.get(CONSTANTS.SESSION_NAME);
+
                 if (!sessionVal.userDefined && _this._globalHelpers.length(storeVal.productsId) > 0) {
-                    // Buscar produtos do masterdata
                     _this._setWishlistUser();
                     _this._vtexHelpers.openPopupLogin(true);
 
@@ -150,7 +407,7 @@ var Private = function () {
                 }
 
                 $this.addClass(_this._self.options.loaderClass);
-                $(':button').prop('disabled', true);
+                $('[data-wishlist-add]').prop('disabled', true);
 
                 _this._removeWishlistProduct(productId, $this);
                 _this._addWishlistProduct(productId, $this);
@@ -169,8 +426,8 @@ var Private = function () {
             });
 
             if (!isProductAdded) {
-                this._requestStartEvent();
-                this._requestAddStartEvent();
+                $(document).trigger(CONSTANTS.EVENTS.REQUEST_START);
+                $(document).trigger(CONSTANTS.EVENTS.REQUEST_ADD_START);
 
                 storeVal.productsId.push(productId);
                 this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
@@ -179,10 +436,10 @@ var Private = function () {
                     $context.addClass(_this2._self.options.activeClass);
                     $context.attr('title', _this2._self.options.linkTitle.remove);
                     $context.removeClass(_this2._self.options.loaderClass);
-                    $(':button').prop('disabled', false);
+                    $('[data-wishlist-add]').prop('disabled', false);
 
-                    _this2._requestEndEvent(productId);
-                    _this2._requestAddEndEvent(productId);
+                    $(document).trigger(CONSTANTS.EVENTS.REQUEST_END, [productId]);
+                    $(document).trigger(CONSTANTS.EVENTS.REQUEST_ADD_END, [productId]);
                     _this2._storageObserve();
                 }).fail(function (err) {
                     return window.console.log(err);
@@ -203,8 +460,8 @@ var Private = function () {
             });
 
             if ($context.hasClass(this._self.options.activeClass)) {
-                this._requestStartEvent();
-                this._requestRemoveStartEvent();
+                $(document).trigger(CONSTANTS.EVENTS.REQUEST_START);
+                $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_START);
 
                 if (isProductAdded) {
                     this._vtexMasterdata.updateUser(storeVal.userEmail, { wishlistProducts: JSON.stringify(filteredProducts) }).done(function (res) {
@@ -216,9 +473,8 @@ var Private = function () {
                         _this3._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
 
                         $context.removeClass(_this3._self.options.loaderClass);
-                        $(':button').prop('disabled', false);
+                        $('[data-wishlist-add]').prop('disabled', false);
 
-                        // Remove class of all products
                         var $wishlistAdd = $(document).find('[data-wishlist-add]');
                         $wishlistAdd.map(function (index, wishlistVal) {
                             if (productId === $(wishlistVal).data('wishlistProductId')) {
@@ -226,8 +482,9 @@ var Private = function () {
                             }
                         });
 
-                        _this3._requestEndEvent(productId);
-                        _this3._requestRemoveEndEvent(productId);
+                        $(document).trigger(CONSTANTS.EVENTS.REQUEST_END, [productId]);
+                        $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_END, [productId]);
+
                         _this3._storageObserve();
                     }).fail(function (err) {
                         return window.console.log(err);
@@ -251,7 +508,8 @@ var Private = function () {
                     return false;
                 }
 
-                _this4._beforeClearItemsEvent();
+                $(document).trigger(CONSTANTS.EVENTS.BEFORE_CLEAR_ITEMS);
+
                 storeVal.productsId = [];
                 _this4._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
 
@@ -259,12 +517,11 @@ var Private = function () {
                     $wishlistAdd.map(function (index, wishlistVal) {
                         return $(wishlistVal).removeClass(_this4._self.options.activeClass);
                     });
-                    _this4._storageObserve();
-                    _this4._renderProducts();
+                    _this4._update();
                 }).fail(function (err) {
                     return window.console.log(err);
                 }).always(function () {
-                    return _this4._afterClearItemsEvent();
+                    return $(document).trigger(CONSTANTS.EVENTS.AFTER_CLEAR_ITEMS);
                 });
             });
         }
@@ -276,6 +533,8 @@ var Private = function () {
             var storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
 
             this._setUserData();
+            this._setLoadMoreBtn();
+            this._splitPages();
 
             if (!this._globalHelpers.isNull(storeVal)) {
                 var $wishlistAdd = $(document).find('[data-wishlist-add]');
@@ -286,12 +545,22 @@ var Private = function () {
                     $wishlistAdd.map(function (index, wishlistVal) {
                         if (productId === $(wishlistVal).data('wishlistProductId')) {
                             $(wishlistVal).addClass(_this5._self.options.activeClass);
+                            $(wishlistVal).attr('title', _this5._self.options.linkTitle.remove);
                         }
                     });
                 });
             } else {
                 $('[data-wishlist-amount]').html(this._setPadding(0));
             }
+        }
+    }, {
+        key: '_update',
+        value: function _update() {
+            this._setUrlHash();
+            this._splitPages();
+            this._resetLoadMoreBtn();
+            this._storageObserve();
+            this._renderProducts();
         }
     }, {
         key: '_checkUserEmail',
@@ -312,7 +581,7 @@ var Private = function () {
             var storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
             var sessionVal = this._session.get(CONSTANTS.SESSION_NAME);
 
-            if (!sessionVal.userDefined && this._globalHelpers.length(storeVal.productsId) > 0) {
+            if (sessionVal.userDefined && this._globalHelpers.length(storeVal.productsId) > 0) {
                 return false;
             }
 
@@ -379,177 +648,6 @@ var Private = function () {
                 });
             }).promise();
         }
-
-        /**
-         * **********************************************
-         * SHOW PRODUCTS
-         * **********************************************
-         */
-
-    }, {
-        key: '_renderProducts',
-        value: function _renderProducts() {
-            var _this9 = this;
-
-            var order = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-            var $wishlistItems = $('[data-wishlist-items');
-            var $wishlistContainer = $('<ul class="vw-wishlist__items"></ul>');
-            var storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
-            var splitList = true;
-            var params = {
-                fq: storeVal.productsId,
-                shelfId: this._self.options.shelfId,
-                order: order || this._self.options.order
-            };
-
-            this._beforeShowItemsEvent();
-
-            if (storeVal.productsId.length < 1) {
-                $('body').addClass(this._self.options.inactiveClass);
-                $wishlistItems.empty().append(this._self.options.notFound);
-
-                this._afterShowItemsEvent();
-
-                return false;
-            }
-
-            this._vtexCatalog.searchPage(params, splitList).then(function (res) {
-                $('body').removeClass(_this9._self.options.inactiveClass);
-                $wishlistItems.empty().append($wishlistContainer.append(res));
-
-                _this9._storageObserve();
-            }).fail(function (err) {
-                return window.console.log(err);
-            }).always(function () {
-                return _this9._afterShowItemsEvent();
-            });
-        }
-    }, {
-        key: '_changeOrder',
-        value: function _changeOrder() {
-            var _this10 = this;
-
-            var $wishlistOrder = $('[data-wishlist-order]');
-
-            $wishlistOrder.find('input').on('change', function (ev) {
-                ev.preventDefault();
-
-                var $this = $(ev.currentTarget);
-                var value = $this.val();
-
-                _this10._renderProducts(value);
-            });
-        }
-
-        /**
-        * **********************************************
-        * HELPERS
-        * **********************************************
-        */
-
-    }, {
-        key: '_setPadding',
-        value: function _setPadding(qty) {
-            return this._self.options.zeroPadding ? this._self.globalHelpers.pad(qty) : qty;
-        }
-
-        /**
-         * **********************************************
-         * CUSTOM EVENTS
-         * **********************************************
-         */
-
-    }, {
-        key: '_requestStartEvent',
-        value: function _requestStartEvent() {
-            /* eslint-disable */
-            var ev = $.Event('requestStart.vtexWishlist');
-            /* eslint-enable */
-
-            $(document).trigger(ev);
-        }
-    }, {
-        key: '_requestAddStartEvent',
-        value: function _requestAddStartEvent() {
-            /* eslint-disable */
-            var ev = $.Event('requestAddStart.vtexWishlist');
-            /* eslint-enable */
-
-            $(document).trigger(ev);
-        }
-    }, {
-        key: '_requestRemoveStartEvent',
-        value: function _requestRemoveStartEvent() {
-            /* eslint-disable */
-            var ev = $.Event('requestRemoveStart.vtexWishlist');
-            /* eslint-enable */
-
-            $(document).trigger(ev);
-        }
-    }, {
-        key: '_requestEndEvent',
-        value: function _requestEndEvent(productId) {
-            /* eslint-disable */
-            var ev = $.Event('requestEnd.vtexWishlist');
-            /* eslint-enable */
-
-            $(document).trigger(ev, [productId]);
-        }
-    }, {
-        key: '_requestAddEndEvent',
-        value: function _requestAddEndEvent(productId) {
-            /* eslint-disable */
-            var ev = $.Event('requestAddEnd.vtexWishlist');
-            /* eslint-enable */
-
-            $(document).trigger(ev, [productId]);
-        }
-    }, {
-        key: '_requestRemoveEndEvent',
-        value: function _requestRemoveEndEvent(productId) {
-            /* eslint-disable */
-            var ev = $.Event('requestRemoveEnd.vtexWishlist');
-            /* eslint-enable */
-
-            $(document).trigger(ev, [productId]);
-        }
-    }, {
-        key: '_beforeShowItemsEvent',
-        value: function _beforeShowItemsEvent() {
-            /* eslint-disable */
-            var ev = $.Event('beforeShowItems.vtexWishlist');
-            /* eslint-enable */
-
-            $(document).trigger(ev);
-        }
-    }, {
-        key: '_afterShowItemsEvent',
-        value: function _afterShowItemsEvent() {
-            /* eslint-disable */
-            var ev = $.Event('afterShowItems.vtexWishlist');
-            /* eslint-enable */
-
-            $(document).trigger(ev);
-        }
-    }, {
-        key: '_beforeClearItemsEvent',
-        value: function _beforeClearItemsEvent() {
-            /* eslint-disable */
-            var ev = $.Event('beforeClearItems.vtexWishlist');
-            /* eslint-enable */
-
-            $(document).trigger(ev);
-        }
-    }, {
-        key: '_afterClearItemsEvent',
-        value: function _afterClearItemsEvent() {
-            /* eslint-disable */
-            var ev = $.Event('afterClearItems.vtexWishlist');
-            /* eslint-enable */
-
-            $(document).trigger(ev);
-        }
     }]);
     return Private;
 }();
@@ -604,6 +702,12 @@ var vtexWishlistMethods = {
         _private._changeOrder();
         _private._clearWishlist();
 
+        _private._setUrlHash();
+        _private._splitPages();
+        _private._createLoadMore();
+        _private._setLoadMoreBtn();
+        _private._loadMoreActions();
+
         $(window).on('authenticatedUser.vtexid', function (ev) {
             return setTimeout(function () {
                 return _this.update();
@@ -616,25 +720,19 @@ var vtexWishlistMethods = {
         });
 
         $(document).on('requestAddEnd.vtexWishlist', function (ev, productId) {
-            return _private._renderProducts();
+            return _this.update();
         });
         $(document).on('requestRemoveEnd.vtexWishlist', function (ev, productId) {
-            return _private._renderProducts();
+            return _this.update();
         });
     },
     update: function update() {
-        _private._storageObserve();
-        _private._renderProducts();
+        _private._update();
     },
     renderProducts: function renderProducts() {
         _private._renderProducts();
     }
 };
-
-/**
- * Create a VtexWishlist class
- * Vtex utilities methods
- */
 
 var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog) {
   var catalogCache = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;

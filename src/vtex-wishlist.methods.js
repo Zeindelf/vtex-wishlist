@@ -48,17 +48,22 @@ export default {
         _private._changeOrder();
         _private._clearWishlist();
 
+        _private._setUrlHash();
+        _private._splitPages();
+        _private._createLoadMore();
+        _private._setLoadMoreBtn();
+        _private._loadMoreActions();
+
 
         $(window).on('authenticatedUser.vtexid', (ev) => setTimeout(() => this.update(), CONSTANTS.DELAY_TIME));
         $(window).on('closed.vtexid', (ev) => setTimeout(() => this.update(), CONSTANTS.DELAY_TIME));
 
-        $(document).on('requestAddEnd.vtexWishlist', (ev, productId) => _private._renderProducts());
-        $(document).on('requestRemoveEnd.vtexWishlist', (ev, productId) => _private._renderProducts());
+        $(document).on('requestAddEnd.vtexWishlist', (ev, productId) => this.update());
+        $(document).on('requestRemoveEnd.vtexWishlist', (ev, productId) => this.update());
     },
 
     update() {
-        _private._storageObserve();
-        _private._renderProducts();
+        _private._update();
     },
 
     renderProducts() {

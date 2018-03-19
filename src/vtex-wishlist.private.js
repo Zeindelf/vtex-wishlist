@@ -1,6 +1,11 @@
 
 import CONSTANTS from './vtex-wishlist.constants.js';
 
+// Extends private methods
+import renderProducts from './vtex-wishlist.render-products.js';
+import pagination from './vtex-wishlist.pagination.js'
+import utils from './vtex-wishlist.utils.js';
+
 class Private {
     _setInstance(self) {
         this._self = self;
@@ -11,6 +16,8 @@ class Private {
 
         this._storage = self.storage;
         this._session = self.storage.session;
+
+        this._globalHelpers.extend(Private.prototype, utils, renderProducts, pagination);
     }
 
     /**
@@ -26,6 +33,11 @@ class Private {
             userEmail: null,
             userId: null,
             productsId: [],
+            pagination: {
+                page: 1,
+                perPage: this._self.options.perPage,
+                totalPages: 1,
+            }
         };
 
         if ( this._globalHelpers.isNull(this._storage.get(CONSTANTS.STORAGE_NAME)) ) {
@@ -39,7 +51,7 @@ class Private {
 
     /**
      * **********************************************
-     * SET PRODUCTS ACTIONS
+     * SET WISHLIST ACTIONS
      * **********************************************
      */
     _setWishlistProduct() {
@@ -52,8 +64,8 @@ class Private {
             // Validate Session Ended / Local persisted
             const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
             const sessionVal = this._session.get(CONSTANTS.SESSION_NAME);
+
             if ( ! sessionVal.userDefined && this._globalHelpers.length(storeVal.productsId) > 0 ) {
-                // Buscar produtos do masterdata
                 this._setWishlistUser();
                 this._vtexHelpers.openPopupLogin(true);
 
@@ -67,7 +79,7 @@ class Private {
             }
 
             $this.addClass(this._self.options.loaderClass);
-            $(':button').prop('disabled', true);
+            $('[data-wishlist-add]').prop('disabled', true);
 
             this._removeWishlistProduct(productId, $this);
             this._addWishlistProduct(productId, $this);
@@ -81,8 +93,8 @@ class Private {
         const isProductAdded = storeVal.productsId.some((elem) => elem === productId);
 
         if ( ! isProductAdded ) {
-            this._requestStartEvent();
-            this._requestAddStartEvent();
+            $(document).trigger(CONSTANTS.EVENTS.REQUEST_START);
+            $(document).trigger(CONSTANTS.EVENTS.REQUEST_ADD_START);
 
             storeVal.productsId.push(productId);
             this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
@@ -92,10 +104,10 @@ class Private {
                     $context.addClass(this._self.options.activeClass);
                     $context.attr('title', this._self.options.linkTitle.remove);
                     $context.removeClass(this._self.options.loaderClass);
-                    $(':button').prop('disabled', false);
+                    $('[data-wishlist-add]').prop('disabled', false);
 
-                    this._requestEndEvent(productId);
-                    this._requestAddEndEvent(productId);
+                    $(document).trigger(CONSTANTS.EVENTS.REQUEST_END, [productId]);
+                    $(document).trigger(CONSTANTS.EVENTS.REQUEST_ADD_END, [productId]);
                     this._storageObserve();
                 })
                 .fail((err) => window.console.log(err));
@@ -108,8 +120,8 @@ class Private {
         const filteredProducts = storeVal.productsId.filter((_productId) => _productId !== productId);
 
         if ( $context.hasClass(this._self.options.activeClass) ) {
-            this._requestStartEvent();
-            this._requestRemoveStartEvent();
+            $(document).trigger(CONSTANTS.EVENTS.REQUEST_START);
+            $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_START);
 
             if ( isProductAdded ) {
                 this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: JSON.stringify(filteredProducts)})
@@ -122,9 +134,8 @@ class Private {
                         this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
 
                         $context.removeClass(this._self.options.loaderClass);
-                        $(':button').prop('disabled', false);
+                        $('[data-wishlist-add]').prop('disabled', false);
 
-                        // Remove class of all products
                         const $wishlistAdd = $(document).find('[data-wishlist-add]');
                         $wishlistAdd.map((index, wishlistVal) => {
                             if ( productId === $(wishlistVal).data('wishlistProductId') ) {
@@ -132,8 +143,9 @@ class Private {
                             }
                         });
 
-                        this._requestEndEvent(productId);
-                        this._requestRemoveEndEvent(productId);
+                        $(document).trigger(CONSTANTS.EVENTS.REQUEST_END, [productId]);
+                        $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_END, [productId]);
+
                         this._storageObserve();
                     })
                     .fail((err) => window.console.log(err));
@@ -153,18 +165,18 @@ class Private {
                 return false;
             }
 
-            this._beforeClearItemsEvent();
+            $(document).trigger(CONSTANTS.EVENTS.BEFORE_CLEAR_ITEMS);
+
             storeVal.productsId = [];
             this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
 
             this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: '[]'})
                 .done((res) => {
                     $wishlistAdd.map((index, wishlistVal) => $(wishlistVal).removeClass(this._self.options.activeClass));
-                    this._storageObserve();
-                    this._renderProducts();
+                    this._update();
                 })
                 .fail((err) => window.console.log(err))
-                .always(() => this._afterClearItemsEvent());
+                .always(() => $(document).trigger(CONSTANTS.EVENTS.AFTER_CLEAR_ITEMS));
         });
     }
 
@@ -172,6 +184,8 @@ class Private {
         const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
 
         this._setUserData();
+        this._setLoadMoreBtn();
+        this._splitPages();
 
         if ( ! this._globalHelpers.isNull(storeVal) ) {
             const $wishlistAdd = $(document).find('[data-wishlist-add]');
@@ -182,12 +196,21 @@ class Private {
                 $wishlistAdd.map((index, wishlistVal) => {
                     if ( productId === $(wishlistVal).data('wishlistProductId') ) {
                         $(wishlistVal).addClass(this._self.options.activeClass);
+                        $(wishlistVal).attr('title', this._self.options.linkTitle.remove);
                     }
                 });
             });
         } else {
             $('[data-wishlist-amount]').html(this._setPadding(0));
         }
+    }
+
+    _update() {
+        this._setUrlHash();
+        this._splitPages();
+        this._resetLoadMoreBtn();
+        this._storageObserve();
+        this._renderProducts();
     }
 
     _checkUserEmail() {
@@ -204,7 +227,7 @@ class Private {
         const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
         const sessionVal = this._session.get(CONSTANTS.SESSION_NAME);
 
-        if ( ! sessionVal.userDefined && this._globalHelpers.length(storeVal.productsId) > 0 ) {
+        if ( sessionVal.userDefined && this._globalHelpers.length(storeVal.productsId) > 0 ) {
             return false;
         }
 
@@ -261,150 +284,6 @@ class Private {
                 })
                 .fail((error) => def.reject(error));
         }).promise();
-    }
-
-    /**
-     * **********************************************
-     * SHOW PRODUCTS
-     * **********************************************
-     */
-    _renderProducts(order = null) {
-        const $wishlistItems = $('[data-wishlist-items');
-        const $wishlistContainer = $('<ul class="vw-wishlist__items"></ul>');
-        const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
-        const splitList = true;
-        const params = {
-            fq: storeVal.productsId,
-            shelfId: this._self.options.shelfId,
-            order: order || this._self.options.order,
-        };
-
-        this._beforeShowItemsEvent();
-
-        if ( storeVal.productsId.length < 1 ) {
-            $('body').addClass(this._self.options.inactiveClass);
-            $wishlistItems.empty().append(this._self.options.notFound);
-
-            this._afterShowItemsEvent();
-
-            return false;
-        }
-
-        this._vtexCatalog.searchPage(params, splitList).then((res) => {
-            $('body').removeClass(this._self.options.inactiveClass);
-            $wishlistItems.empty().append($wishlistContainer.append(res));
-
-            this._storageObserve();
-        })
-        .fail((err) => window.console.log(err))
-        .always(() => this._afterShowItemsEvent());
-    }
-
-    _changeOrder() {
-        const $wishlistOrder = $('[data-wishlist-order]');
-
-        $wishlistOrder.find('input').on('change', (ev) => {
-            ev.preventDefault();
-
-            const $this = $(ev.currentTarget);
-            const value = $this.val();
-
-            this._renderProducts(value);
-        });
-    }
-
-     /**
-     * **********************************************
-     * HELPERS
-     * **********************************************
-     */
-    _setPadding(qty) {
-        return ( this._self.options.zeroPadding ) ? this._self.globalHelpers.pad(qty) : qty;
-    }
-
-    /**
-     * **********************************************
-     * CUSTOM EVENTS
-     * **********************************************
-     */
-    _requestStartEvent() {
-        /* eslint-disable */
-        const ev = $.Event('requestStart.vtexWishlist');
-        /* eslint-enable */
-
-        $(document).trigger(ev);
-    }
-
-    _requestAddStartEvent() {
-        /* eslint-disable */
-        const ev = $.Event('requestAddStart.vtexWishlist');
-        /* eslint-enable */
-
-        $(document).trigger(ev);
-    }
-
-    _requestRemoveStartEvent() {
-        /* eslint-disable */
-        const ev = $.Event('requestRemoveStart.vtexWishlist');
-        /* eslint-enable */
-
-        $(document).trigger(ev);
-    }
-
-    _requestEndEvent(productId) {
-        /* eslint-disable */
-        const ev = $.Event('requestEnd.vtexWishlist');
-        /* eslint-enable */
-
-        $(document).trigger(ev, [productId]);
-    }
-
-    _requestAddEndEvent(productId) {
-        /* eslint-disable */
-        const ev = $.Event('requestAddEnd.vtexWishlist');
-        /* eslint-enable */
-
-        $(document).trigger(ev, [productId]);
-    }
-
-    _requestRemoveEndEvent(productId) {
-        /* eslint-disable */
-        const ev = $.Event('requestRemoveEnd.vtexWishlist');
-        /* eslint-enable */
-
-        $(document).trigger(ev, [productId]);
-    }
-
-    _beforeShowItemsEvent() {
-        /* eslint-disable */
-        const ev = $.Event('beforeShowItems.vtexWishlist');
-        /* eslint-enable */
-
-        $(document).trigger(ev);
-    }
-
-    _afterShowItemsEvent() {
-        /* eslint-disable */
-        const ev = $.Event('afterShowItems.vtexWishlist');
-        /* eslint-enable */
-
-        $(document).trigger(ev);
-    }
-
-    _beforeClearItemsEvent() {
-        /* eslint-disable */
-        const ev = $.Event('beforeClearItems.vtexWishlist');
-        /* eslint-enable */
-
-        $(document).trigger(ev);
-    }
-
-    _afterClearItemsEvent() {
-        /* eslint-disable */
-        const ev = $.Event('afterClearItems.vtexWishlist');
-        /* eslint-enable */
-
-        $(document).trigger(ev);
     }
 }
 
