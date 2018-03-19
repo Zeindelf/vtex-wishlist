@@ -3,7 +3,7 @@ import CONSTANTS from './vtex-wishlist.constants.js';
 
 // Extends private methods
 import renderProducts from './vtex-wishlist.render-products.js';
-import pagination from './vtex-wishlist.pagination.js'
+import pagination from './vtex-wishlist.pagination.js';
 import utils from './vtex-wishlist.utils.js';
 
 class Private {
@@ -37,7 +37,7 @@ class Private {
                 page: 1,
                 perPage: this._self.options.perPage,
                 totalPages: 1,
-            }
+            },
         };
 
         if ( this._globalHelpers.isNull(this._storage.get(CONSTANTS.STORAGE_NAME)) ) {

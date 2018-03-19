@@ -1,12 +1,12 @@
 
 /*!!
- * VtexWishlist.js v0.1.1
+ * VtexWishlist.js v0.2.0
  * https://github.com/zeindelf/vtex-wishlist
  *
  * Copyright (c) 2017-2018 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-03-18T22:08:24.192Z
+ * Date: 2018-03-19T06:37:02.492Z
  */
 
 var vtexUtilsVersion = '1.2.0';
@@ -235,7 +235,6 @@ var pagination = {
     _createLoadMore: function _createLoadMore() {
         var _$;
 
-        var storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
         var $loadMoreWrapper = $('<div />', { class: this._self.options.loadMoreWrapperClass });
         var $loadMoreBtn = $('<button />', (_$ = {
             class: this._self.options.loadMoreBtnClass
@@ -314,6 +313,7 @@ var utils = {
     }
 };
 
+// Extends private methods
 var Private = function () {
     function Private() {
         classCallCheck(this, Private);
@@ -728,6 +728,11 @@ var vtexWishlistMethods = {
     }
 };
 
+/**
+ * Create a VtexWishlist class
+ * Vtex utilities methods
+ */
+
 var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog) {
   var catalogCache = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
   classCallCheck(this, VtexWishlist);
@@ -736,7 +741,7 @@ var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog)
    * Version
    * @type {String}
    */
-  this.version = '0.1.1';
+  this.version = '0.2.0';
 
   /**
    * Package name

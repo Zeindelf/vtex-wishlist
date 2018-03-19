@@ -15,8 +15,7 @@ export default {
     // TODO: Create Pagination
 
     _createLoadMore() {
-        const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
-        const $loadMoreWrapper = $('<div />', {class:this._self.options.loadMoreWrapperClass})
+        const $loadMoreWrapper = $('<div />', {class: this._self.options.loadMoreWrapperClass});
         const $loadMoreBtn = $('<button />', {
             class: this._self.options.loadMoreBtnClass,
             ['data-wishlist-page']: 2,
@@ -72,4 +71,4 @@ export default {
         window.location.hash = pageNumber;
         this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
     },
-}
+};
