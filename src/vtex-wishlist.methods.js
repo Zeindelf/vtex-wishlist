@@ -54,6 +54,7 @@ export default {
         _private._setLoadMoreBtn();
         _private._loadMoreActions();
 
+        _private._renderProducts();
 
         $(window).on('authenticatedUser.vtexid', (ev) => setTimeout(() => this.update(), CONSTANTS.DELAY_TIME));
         $(window).on('closed.vtexid', (ev) => setTimeout(() => this.update(), CONSTANTS.DELAY_TIME));

@@ -23,7 +23,7 @@ export default {
 
         if ( $wishlistItems.length < 1 ) {
             // Container doesn't exists
-            throw new Error(CONSTANTS.MESSAGES.wishlistItems);
+            return false;
         }
 
         $(document).trigger(CONSTANTS.EVENTS.BEFORE_SHOW_ITEMS);

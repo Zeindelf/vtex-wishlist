@@ -67,13 +67,13 @@ class Private {
 
             if ( ! sessionVal.userDefined && this._globalHelpers.length(storeVal.productsId) > 0 ) {
                 this._setWishlistUser();
-                this._vtexHelpers.openPopupLogin(true);
+                this._vtexHelpers.openPopupLogin(! this._self.options.reloadPage);
 
                 return false;
             }
 
             if ( ! this._checkUserEmail() ) {
-                this._vtexHelpers.openPopupLogin(true);
+                this._vtexHelpers.openPopupLogin(! this._self.options.reloadPage);
 
                 return false;
             }

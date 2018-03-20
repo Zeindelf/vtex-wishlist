@@ -3,6 +3,7 @@ export default {
     orderBy: 'OrderByPriceASC',
     notFound: null,
     zeroPadding: false,
+    reloadPage: true,
 
     perPage: 12,
 

@@ -6,7 +6,7 @@
  * Copyright (c) 2017-2018 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-03-19T06:37:02.492Z
+ * Date: 2018-03-20T01:33:07.673Z
  */
 
 var vtexUtilsVersion = '1.2.0';
@@ -47,6 +47,7 @@ var DEFAULTS = {
     orderBy: 'OrderByPriceASC',
     notFound: null,
     zeroPadding: false,
+    reloadPage: true,
 
     perPage: 12,
 
@@ -95,7 +96,7 @@ var renderProducts = {
 
         if ($wishlistItems.length < 1) {
             // Container doesn't exists
-            throw new Error(CONSTANTS.MESSAGES.wishlistItems);
+            return false;
         }
 
         $(document).trigger(CONSTANTS.EVENTS.BEFORE_SHOW_ITEMS);
@@ -313,7 +314,6 @@ var utils = {
     }
 };
 
-// Extends private methods
 var Private = function () {
     function Private() {
         classCallCheck(this, Private);
@@ -389,13 +389,13 @@ var Private = function () {
 
                 if (!sessionVal.userDefined && _this._globalHelpers.length(storeVal.productsId) > 0) {
                     _this._setWishlistUser();
-                    _this._vtexHelpers.openPopupLogin(true);
+                    _this._vtexHelpers.openPopupLogin(!_this._self.options.reloadPage);
 
                     return false;
                 }
 
                 if (!_this._checkUserEmail()) {
-                    _this._vtexHelpers.openPopupLogin(true);
+                    _this._vtexHelpers.openPopupLogin(!_this._self.options.reloadPage);
 
                     return false;
                 }
@@ -702,6 +702,8 @@ var vtexWishlistMethods = {
         _private._setLoadMoreBtn();
         _private._loadMoreActions();
 
+        _private._renderProducts();
+
         $(window).on('authenticatedUser.vtexid', function (ev) {
             return setTimeout(function () {
                 return _this.update();
@@ -727,11 +729,6 @@ var vtexWishlistMethods = {
         _private._renderProducts();
     }
 };
-
-/**
- * Create a VtexWishlist class
- * Vtex utilities methods
- */
 
 var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog) {
   var catalogCache = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
