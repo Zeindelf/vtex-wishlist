@@ -3,6 +3,10 @@ import CONSTANTS from './vtex-wishlist.constants.js';
 
 export default {
     _splitPages() {
+        if ( ! CONSTANTS.BODY.hasClass(this._self.options.wishlistPage) ) {
+            return false;
+        }
+
         const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
         const chunkItems = this._globalHelpers.chunk(storeVal.productsId, this._self.options.perPage);
 
@@ -15,6 +19,10 @@ export default {
     // TODO: Create Pagination
 
     _createLoadMore() {
+        if ( ! CONSTANTS.BODY.hasClass(this._self.options.wishlistPage) ) {
+            return false;
+        }
+
         const $loadMoreWrapper = $('<div />', {class: this._self.options.loadMoreWrapperClass});
         const $loadMoreBtn = $('<button />', {
             class: this._self.options.loadMoreBtnClass,
@@ -27,6 +35,10 @@ export default {
     },
 
     _loadMoreActions() {
+        if ( ! CONSTANTS.BODY.hasClass(this._self.options.wishlistPage) ) {
+            return false;
+        }
+
         $(document).on('click', '[data-wishlist-load-more-btn]', (ev) => {
             ev.preventDefault();
 
@@ -48,6 +60,10 @@ export default {
     },
 
     _setLoadMoreBtn() {
+        if ( ! CONSTANTS.BODY.hasClass(this._self.options.wishlistPage) ) {
+            return false;
+        }
+
         const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
         const $loadMoreBtn = $(document).find('[data-wishlist-load-more-btn]');
 
@@ -59,11 +75,19 @@ export default {
     },
 
     _resetLoadMoreBtn() {
+        if ( ! CONSTANTS.BODY.hasClass(this._self.options.wishlistPage) ) {
+            return false;
+        }
+
         const $loadMoreBtn = $(document).find('[data-wishlist-load-more-btn]');
         $loadMoreBtn.data('wishlistPage', 2);
     },
 
     _setUrlHash(page) {
+        if ( ! CONSTANTS.BODY.hasClass(this._self.options.wishlistPage) ) {
+            return false;
+        }
+
         const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
         const pageNumber = typeof page !== 'undefined' ? page : 1;
 

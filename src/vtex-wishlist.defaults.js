@@ -12,6 +12,7 @@ export default {
         remove: 'Remover da wishlist',
     },
 
+    wishlistPage: 'is--wishlist',
     activeClass: 'is--active',
     emptyClass: 'is--wishlist-empty',
     loaderClass: 'has--wishlist-loader',

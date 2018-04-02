@@ -45,7 +45,7 @@ class Private {
         }
 
         if ( this._globalHelpers.isNull(this._session.get(CONSTANTS.SESSION_NAME)) ) {
-            this._session.set(CONSTANTS.SESSION_NAME, sessionOptions);
+            this._session.set(CONSTANTS.SESSION_NAME, sessionOptions, CONSTANTS.EXPIRE_TIME);
         }
     }
 
@@ -97,7 +97,7 @@ class Private {
             $(document).trigger(CONSTANTS.EVENTS.REQUEST_ADD_START);
 
             storeVal.productsId.push(productId);
-            this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
+            this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
 
             this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: JSON.stringify(storeVal.productsId)})
                 .done((res) => {
@@ -131,7 +131,7 @@ class Private {
 
                         storeVal.productsId = filteredProducts;
 
-                        this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
+                        this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
 
                         $context.removeClass(this._self.options.loaderClass);
                         $('[data-wishlist-add]').prop('disabled', false);
@@ -168,7 +168,7 @@ class Private {
             $(document).trigger(CONSTANTS.EVENTS.BEFORE_CLEAR_ITEMS);
 
             storeVal.productsId = [];
-            this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
+            this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
 
             this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: '[]'})
                 .done((res) => {
@@ -187,22 +187,29 @@ class Private {
         this._setLoadMoreBtn();
         this._splitPages();
 
-        if ( ! this._globalHelpers.isNull(storeVal) ) {
-            const $wishlistAdd = $(document).find('[data-wishlist-add]');
+        this._removeUnavailableProducts(storeVal.productsId).then((response) => {
+            storeVal.productsId = response;
 
-            $('[data-wishlist-amount]').html(this._setPadding(storeVal.productsId.length));
+            this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
 
-            storeVal.productsId.map((productId) => {
-                $wishlistAdd.map((index, wishlistVal) => {
-                    if ( productId === $(wishlistVal).data('wishlistProductId') ) {
-                        $(wishlistVal).addClass(this._self.options.activeClass);
-                        $(wishlistVal).attr('title', this._self.options.linkTitle.remove);
-                    }
+            if ( ! this._globalHelpers.isEmpty(storeVal.productsId) ) {
+                const $wishlistAdd = $(document).find('[data-wishlist-add]');
+
+                $('[data-wishlist-amount]').html(this._setPadding(storeVal.productsId.length));
+
+                storeVal.productsId.map((productId) => {
+                    $wishlistAdd.map((index, wishlistVal) => {
+                        if ( productId === $(wishlistVal).data('wishlistProductId') ) {
+                            $(wishlistVal).addClass(this._self.options.activeClass);
+                            $(wishlistVal).attr('title', this._self.options.linkTitle.remove);
+                        }
+                    });
                 });
-            });
-        } else {
-            $('[data-wishlist-amount]').html(this._setPadding(0));
-        }
+            } else {
+                $('[data-wishlist-amount]').html(this._setPadding(0));
+                this._addEmptyClass();
+            }
+        });
     }
 
     _update() {
@@ -252,10 +259,14 @@ class Private {
                 storeVal.productsId = JSON.parse(res.userData.wishlistProducts || '[]');
                 sessionVal.userDefined = true;
 
-                this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
-                this._session.set(CONSTANTS.SESSION_NAME, sessionVal);
+                this._removeUnavailableProducts(storeVal.productsId).then((response) => {
+                    storeVal.productsId = response;
 
-                setTimeout(() => this._storageObserve(), CONSTANTS.DELAY_TIME);
+                    this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
+                    this._session.set(CONSTANTS.SESSION_NAME, sessionVal, CONSTANTS.EXPIRE_TIME);
+
+                    setTimeout(() => this._storageObserve(), CONSTANTS.DELAY_TIME);
+                });
             }
         })
         .fail((err) => window.console.log(err));
@@ -283,6 +294,20 @@ class Private {
                     def.resolve(response);
                 })
                 .fail((error) => def.reject(error));
+        }).promise();
+    }
+
+    _removeUnavailableProducts(productsId) {
+        /* eslint-disable */
+        return $.Deferred((def) => {
+            /* eslint-enable */
+            return this._vtexCatalog.searchProductArray(productsId).then((response) => {
+                if ( this._globalHelpers.length(response) < 1 ) {
+                    productsId = [];
+                }
+
+                def.resolve(productsId);
+            });
         }).promise();
     }
 }

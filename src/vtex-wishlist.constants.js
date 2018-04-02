@@ -3,6 +3,7 @@ const vtexUtilsVersion = '1.2.0';
 
 export default {
     DELAY_TIME: 150, // Miliseconds
+    EXPIRE_TIME: 60 * 60 * 4, // Seconds * Minutes * Hours (default: 4h)
     STORAGE_NAME: '_vw_attributes',
     SESSION_NAME: '_vw_session',
     RETRIEVED_DATA: [
