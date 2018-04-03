@@ -70,4 +70,8 @@ export default {
     renderProducts() {
         _private._renderProducts();
     },
+
+    getProducts() {
+        return _private._getProducts();
+    },
 };

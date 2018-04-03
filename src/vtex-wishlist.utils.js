@@ -2,6 +2,12 @@
 import CONSTANTS from './vtex-wishlist.constants.js';
 
 export default {
+    _getProducts() {
+        const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
+
+        return storeVal.productsId;
+    },
+
     _setPadding(qty) {
         return ( this._self.options.zeroPadding ) ? this._self.globalHelpers.pad(qty) : qty;
     },

@@ -93,8 +93,10 @@ class Private {
         const isProductAdded = storeVal.productsId.some((elem) => elem === productId);
 
         if ( ! isProductAdded ) {
-            $(document).trigger(CONSTANTS.EVENTS.REQUEST_START);
-            $(document).trigger(CONSTANTS.EVENTS.REQUEST_ADD_START);
+            CONSTANTS.BODY.addClass(this._self.options.addLoaderClass);
+
+            $(document).trigger(CONSTANTS.EVENTS.REQUEST_START, [productId]);
+            $(document).trigger(CONSTANTS.EVENTS.REQUEST_ADD_START, [productId]);
 
             storeVal.productsId.push(productId);
             this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
@@ -110,7 +112,8 @@ class Private {
                     $(document).trigger(CONSTANTS.EVENTS.REQUEST_ADD_END, [productId]);
                     this._storageObserve();
                 })
-                .fail((err) => window.console.log(err));
+                .fail((err) => window.console.log(err))
+                .always(() => CONSTANTS.BODY.removeClass(this._self.options.addLoaderClass));
         }
     }
 
@@ -120,8 +123,10 @@ class Private {
         const filteredProducts = storeVal.productsId.filter((_productId) => _productId !== productId);
 
         if ( $context.hasClass(this._self.options.activeClass) ) {
-            $(document).trigger(CONSTANTS.EVENTS.REQUEST_START);
-            $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_START);
+            CONSTANTS.BODY.addClass(this._self.options.removeLoaderClass);
+
+            $(document).trigger(CONSTANTS.EVENTS.REQUEST_START, [productId]);
+            $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_START, [productId]);
 
             if ( isProductAdded ) {
                 this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: JSON.stringify(filteredProducts)})
@@ -148,7 +153,8 @@ class Private {
 
                         this._storageObserve();
                     })
-                    .fail((err) => window.console.log(err));
+                    .fail((err) => window.console.log(err))
+                    .always(() => CONSTANTS.BODY.removeClass(this._self.options.removeLoaderClass));
             }
 
             return false;
@@ -165,6 +171,7 @@ class Private {
                 return false;
             }
 
+            CONSTANTS.BODY.addClass(this._self.options.clearLoaderClass);
             $(document).trigger(CONSTANTS.EVENTS.BEFORE_CLEAR_ITEMS);
 
             storeVal.productsId = [];
@@ -176,7 +183,10 @@ class Private {
                     this._update();
                 })
                 .fail((err) => window.console.log(err))
-                .always(() => $(document).trigger(CONSTANTS.EVENTS.AFTER_CLEAR_ITEMS));
+                .always(() => {
+                    CONSTANTS.BODY.removeClass(this._self.options.clearLoaderClass);
+                    $(document).trigger(CONSTANTS.EVENTS.AFTER_CLEAR_ITEMS);
+                });
         });
     }
 
