@@ -1,12 +1,12 @@
 
 /*!!
- * VtexWishlist.js v0.4.0
+ * VtexWishlist.js v0.4.2
  * https://github.com/zeindelf/vtex-wishlist
  *
  * Copyright (c) 2017-2018 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-04-02T21:41:04.622Z
+ * Date: 2018-04-03T00:57:22.234Z
  */
 
 (function (global, factory) {
@@ -812,6 +812,11 @@ var vtexWishlistMethods = {
     }
 };
 
+/**
+ * Create a VtexWishlist class
+ * Vtex utilities methods
+ */
+
 var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog) {
   var catalogCache = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
   classCallCheck(this, VtexWishlist);
@@ -820,7 +825,7 @@ var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog)
    * Version
    * @type {String}
    */
-  this.version = '0.4.0';
+  this.version = '0.4.2';
 
   /**
    * Package name
