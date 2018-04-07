@@ -58,25 +58,12 @@ class Private {
         const setData = (ev) => {
             ev.preventDefault();
 
+            if ( !this._validateUser() ) {
+                return false;
+            }
+
             const $this = $(ev.currentTarget);
             const productId = $this.data('wishlistProductId');
-
-            // Validate Session Ended / Local persisted
-            const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
-            const sessionVal = this._session.get(CONSTANTS.SESSION_NAME);
-
-            if ( ! sessionVal.userDefined && this._globalHelpers.length(storeVal.productsId) > 0 ) {
-                this._setWishlistUser();
-                this._vtexHelpers.openPopupLogin(! this._self.options.reloadPage);
-
-                return false;
-            }
-
-            if ( ! this._checkUserEmail() ) {
-                this._vtexHelpers.openPopupLogin(! this._self.options.reloadPage);
-
-                return false;
-            }
 
             $this.addClass(this._self.options.loaderClass);
             $('[data-wishlist-add]').prop('disabled', true);
@@ -89,10 +76,20 @@ class Private {
     }
 
     _addWishlistProduct(productId, $context) {
+        this._addProduct(productId, $context);
+    }
+
+    _removeWishlistProduct(productId, $context) {
+        if ( $context.hasClass(this._self.options.activeClass) ) {
+            this._removeProduct(productId, $context);
+        }
+    }
+
+    _addProduct(productId, $context = null) {
         const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
         const isProductAdded = storeVal.productsId.some((elem) => elem === productId);
 
-        if ( ! isProductAdded ) {
+        if ( !isProductAdded ) {
             CONSTANTS.BODY.addClass(this._self.options.addLoaderClass);
 
             $(document).trigger(CONSTANTS.EVENTS.REQUEST_START, [productId]);
@@ -103,9 +100,12 @@ class Private {
 
             this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: JSON.stringify(storeVal.productsId)})
                 .done((res) => {
-                    $context.addClass(this._self.options.activeClass);
-                    $context.attr('title', this._self.options.linkTitle.remove);
-                    $context.removeClass(this._self.options.loaderClass);
+                    if ( !this._globalHelpers.isNull($context) ) {
+                        $context.addClass(this._self.options.activeClass);
+                        $context.attr('title', this._self.options.linkTitle.remove);
+                        $context.removeClass(this._self.options.loaderClass);
+                    }
+
                     $('[data-wishlist-add]').prop('disabled', false);
 
                     $(document).trigger(CONSTANTS.EVENTS.REQUEST_END, [productId]);
@@ -117,77 +117,100 @@ class Private {
         }
     }
 
-    _removeWishlistProduct(productId, $context) {
+    _removeProduct(productId, $context = null) {
+        CONSTANTS.BODY.addClass(this._self.options.removeLoaderClass);
+
         const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
         const isProductAdded = storeVal.productsId.some((elem) => elem === productId);
         const filteredProducts = storeVal.productsId.filter((_productId) => _productId !== productId);
 
-        if ( $context.hasClass(this._self.options.activeClass) ) {
-            CONSTANTS.BODY.addClass(this._self.options.removeLoaderClass);
+        $(document).trigger(CONSTANTS.EVENTS.REQUEST_START, [productId]);
+        $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_START, [productId]);
 
-            $(document).trigger(CONSTANTS.EVENTS.REQUEST_START, [productId]);
-            $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_START, [productId]);
-
-            if ( isProductAdded ) {
-                this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: JSON.stringify(filteredProducts)})
-                    .done((res) => {
+        if ( isProductAdded ) {
+            this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: JSON.stringify(filteredProducts)})
+                .done((res) => {
+                    if ( !this._globalHelpers.isNull($context) ) {
                         $context.removeClass(this._self.options.activeClass);
                         $context.attr('title', this._self.options.linkTitle.add);
-
-                        storeVal.productsId = filteredProducts;
-
-                        this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
-
                         $context.removeClass(this._self.options.loaderClass);
-                        $('[data-wishlist-add]').prop('disabled', false);
+                    }
 
-                        const $wishlistAdd = $(document).find('[data-wishlist-add]');
-                        $wishlistAdd.map((index, wishlistVal) => {
-                            if ( productId === $(wishlistVal).data('wishlistProductId') ) {
-                                $(wishlistVal).removeClass(this._self.options.activeClass);
-                            }
-                        });
+                    storeVal.productsId = filteredProducts;
 
-                        $(document).trigger(CONSTANTS.EVENTS.REQUEST_END, [productId]);
-                        $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_END, [productId]);
+                    this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
 
-                        this._storageObserve();
-                    })
-                    .fail((err) => window.console.log(err))
-                    .always(() => CONSTANTS.BODY.removeClass(this._self.options.removeLoaderClass));
-            }
+                    $('[data-wishlist-add]').prop('disabled', false);
 
-            return false;
+                    const $wishlistAdd = $(document).find('[data-wishlist-add]');
+                    $wishlistAdd.map((index, wishlistVal) => {
+                        if ( productId === $(wishlistVal).data('wishlistProductId') ) {
+                            $(wishlistVal).removeClass(this._self.options.activeClass);
+                        }
+                    });
+
+                    $(document).trigger(CONSTANTS.EVENTS.REQUEST_END, [productId]);
+                    $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_END, [productId]);
+
+                    this._storageObserve();
+                })
+                .fail((err) => window.console.log(err))
+                .always(() => CONSTANTS.BODY.removeClass(this._self.options.removeLoaderClass));
         }
     }
 
     _clearWishlist() {
         $(document).on('click', '[data-wishlist-clear]', (ev) => {
             ev.preventDefault();
-            const $wishlistAdd = $(document).find('[data-wishlist-add]');
-            const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
-
-            if ( storeVal.productsId.length < 1 ) {
-                return false;
-            }
-
-            CONSTANTS.BODY.addClass(this._self.options.clearLoaderClass);
-            $(document).trigger(CONSTANTS.EVENTS.BEFORE_CLEAR_ITEMS);
-
-            storeVal.productsId = [];
-            this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
-
-            this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: '[]'})
-                .done((res) => {
-                    $wishlistAdd.map((index, wishlistVal) => $(wishlistVal).removeClass(this._self.options.activeClass));
-                    this._update();
-                })
-                .fail((err) => window.console.log(err))
-                .always(() => {
-                    CONSTANTS.BODY.removeClass(this._self.options.clearLoaderClass);
-                    $(document).trigger(CONSTANTS.EVENTS.AFTER_CLEAR_ITEMS);
-                });
+            this._clear();
         });
+    }
+
+    _clear() {
+        const $wishlistAdd = $(document).find('[data-wishlist-add]');
+        const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
+
+        if ( storeVal.productsId.length < 1 ) {
+            return false;
+        }
+
+        CONSTANTS.BODY.addClass(this._self.options.clearLoaderClass);
+        $(document).trigger(CONSTANTS.EVENTS.BEFORE_CLEAR_ITEMS);
+
+        storeVal.productsId = [];
+        this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
+
+        this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: '[]'})
+            .done((res) => {
+                $wishlistAdd.map((index, wishlistVal) => $(wishlistVal).removeClass(this._self.options.activeClass));
+                this._update();
+            })
+            .fail((err) => window.console.log(err))
+            .always(() => {
+                CONSTANTS.BODY.removeClass(this._self.options.clearLoaderClass);
+                $(document).trigger(CONSTANTS.EVENTS.AFTER_CLEAR_ITEMS);
+            });
+    }
+
+    _validateUser() {
+        // Validate Session Ended / Local persisted
+        const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
+        const sessionVal = this._session.get(CONSTANTS.SESSION_NAME);
+
+        if ( !sessionVal.userDefined && this._globalHelpers.length(storeVal.productsId) > 0 ) {
+            this._setWishlistUser();
+            this._vtexHelpers.openPopupLogin(!this._self.options.reloadPage);
+
+            return false;
+        }
+
+        if ( !this._checkUserEmail() ) {
+            this._vtexHelpers.openPopupLogin(!this._self.options.reloadPage);
+
+            return false;
+        }
+
+        return true;
     }
 
     _storageObserve() {
@@ -202,7 +225,7 @@ class Private {
 
             this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
 
-            if ( ! this._globalHelpers.isEmpty(storeVal.productsId) ) {
+            if ( !this._globalHelpers.isEmpty(storeVal.productsId) ) {
                 const $wishlistAdd = $(document).find('[data-wishlist-add]');
 
                 $('[data-wishlist-amount]').html(this._setPadding(storeVal.productsId.length));
@@ -254,7 +277,7 @@ class Private {
 
             this._storage.set(CONSTANTS.STORAGE_NAME, storeVal);
 
-            if ( ! sessionVal.userDefined ) {
+            if ( !sessionVal.userDefined ) {
                 this._setWishlistUser();
             }
         });

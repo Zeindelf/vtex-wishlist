@@ -67,11 +67,27 @@ export default {
         _private._update();
     },
 
-    renderProducts() {
-        _private._renderProducts();
+    addProduct(productId, $context) {
+        _private._addProduct(productId, $context);
+    },
+
+    removeProduct(productId, $context) {
+        _private._removeProduct(productId, $context);
+    },
+
+    clearWishlist() {
+        _private._clear();
     },
 
     getProducts() {
         return _private._getProducts();
     },
+
+    renderProducts() {
+        _private._renderProducts();
+    },
+
+    validateUser() {
+        _private._validateUser();
+    }
 };

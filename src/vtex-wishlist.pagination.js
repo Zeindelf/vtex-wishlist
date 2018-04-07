@@ -3,10 +3,6 @@ import CONSTANTS from './vtex-wishlist.constants.js';
 
 export default {
     _splitPages() {
-        if ( ! CONSTANTS.BODY.hasClass(this._self.options.wishlistPage) ) {
-            return false;
-        }
-
         const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
         const chunkItems = this._globalHelpers.chunk(storeVal.productsId, this._self.options.perPage);
 
