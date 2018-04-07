@@ -89,5 +89,5 @@ export default {
 
     validateUser() {
         _private._validateUser();
-    }
+    },
 };
