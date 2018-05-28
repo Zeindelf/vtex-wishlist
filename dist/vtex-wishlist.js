@@ -1,12 +1,12 @@
 
 /*!!
- * VtexWishlist.js v0.5.0
+ * VtexWishlist.js v0.6.0
  * https://github.com/zeindelf/vtex-wishlist
  *
  * Copyright (c) 2017-2018 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-05-28T18:43:48.593Z
+ * Date: 2018-05-28T19:25:55.901Z
  */
 
 (function (global, factory) {
@@ -351,6 +351,7 @@ var utils = {
     }
 };
 
+// Extends private methods
 var Private = function () {
     function Private() {
         classCallCheck(this, Private);
@@ -843,6 +844,11 @@ var vtexWishlistMethods = {
     }
 };
 
+/**
+ * Create a VtexWishlist class
+ * Vtex utilities methods
+ */
+
 var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, vtexCatalog) {
   classCallCheck(this, VtexWishlist);
 
@@ -850,7 +856,7 @@ var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, vtexCatalog)
    * Version
    * @type {String}
    */
-  this.version = '0.5.0';
+  this.version = '0.6.0';
 
   /**
    * Package name
