@@ -1,8 +1,8 @@
 
-const vtexUtilsVersion = '1.2.0';
+const vtexCatalogVersion = '1.0.0';
 
 export default {
-    DELAY_TIME: 150, // Miliseconds
+    DELAY_TIME: 100, // Miliseconds
     EXPIRE_TIME: 60 * 60 * 4, // Seconds * Minutes * Hours (default: 4h)
     STORAGE_NAME: '_vw_attributes',
     SESSION_NAME: '_vw_session',
@@ -10,11 +10,12 @@ export default {
         'wishlistProducts',
     ],
     MESSAGES: {
-        vtexUtils: 'VtexUtils.js is required and must be an instance. Download it from https://www.npmjs.com/package/vtex-utils',
-        vtexUtilsVersion: vtexUtilsVersion,
-        vtexUtilsVersionMessage: `VtexUtils version must be higher than ${vtexUtilsVersion}. Download last version on https://www.npmjs.com/package/vtex-utils`,
+        vtexUtils: 'VtexUtils.js is required. Download it from https://www.npmjs.com/package/vtex-utils',
         vtexMasterdata: 'VtexMasterdata.js is required. Download it from https://www.npmjs.com/package/vtex-masterdata',
-        storeName: `The option 'storeName' is required and must be a string.`,
+        vtexCatalog: 'VtexCatalog.js is required. Download it from https://www.npmjs.com/package/vtex-catalog',
+        vtexCatalogVersion: vtexCatalogVersion,
+        vtexCatalogVersionMessage: `VtexCatalog version must be higher than ${vtexCatalogVersion}. Download last version on https://www.npmjs.com/package/vtex-catalog`,
+
         shelfId: `The option 'shelfId' is required and must be a string.`,
         notFound: `The option 'notFound' must be a function.`,
         wishlistItems: `You'll need declare an container with data attribute '<div data-wishlist-items=""></div>' to append your list.`,

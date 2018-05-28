@@ -6,7 +6,7 @@
  * Copyright (c) 2017-2018 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-04-07T04:36:47.238Z
+ * Date: 2018-05-28T18:43:48.593Z
  */
 
 (function (global, factory) {
@@ -15,20 +15,21 @@
 	(global.VTEX = global.VTEX || {}, global.VTEX.VtexWishlist = factory());
 }(this, (function () { 'use strict';
 
-var vtexUtilsVersion = '1.2.0';
+var vtexCatalogVersion = '1.0.0';
 
 var CONSTANTS = {
-    DELAY_TIME: 150, // Miliseconds
+    DELAY_TIME: 100, // Miliseconds
     EXPIRE_TIME: 60 * 60 * 4, // Seconds * Minutes * Hours (default: 4h)
     STORAGE_NAME: '_vw_attributes',
     SESSION_NAME: '_vw_session',
     RETRIEVED_DATA: ['wishlistProducts'],
     MESSAGES: {
-        vtexUtils: 'VtexUtils.js is required and must be an instance. Download it from https://www.npmjs.com/package/vtex-utils',
-        vtexUtilsVersion: vtexUtilsVersion,
-        vtexUtilsVersionMessage: 'VtexUtils version must be higher than ' + vtexUtilsVersion + '. Download last version on https://www.npmjs.com/package/vtex-utils',
+        vtexUtils: 'VtexUtils.js is required. Download it from https://www.npmjs.com/package/vtex-utils',
         vtexMasterdata: 'VtexMasterdata.js is required. Download it from https://www.npmjs.com/package/vtex-masterdata',
-        storeName: 'The option \'storeName\' is required and must be a string.',
+        vtexCatalog: 'VtexCatalog.js is required. Download it from https://www.npmjs.com/package/vtex-catalog',
+        vtexCatalogVersion: vtexCatalogVersion,
+        vtexCatalogVersionMessage: 'VtexCatalog version must be higher than ' + vtexCatalogVersion + '. Download last version on https://www.npmjs.com/package/vtex-catalog',
+
         shelfId: 'The option \'shelfId\' is required and must be a string.',
         notFound: 'The option \'notFound\' must be a function.',
         wishlistItems: 'You\'ll need declare an container with data attribute \'<div data-wishlist-items=""></div>\' to append your list.'
@@ -350,7 +351,6 @@ var utils = {
     }
 };
 
-// Extends private methods
 var Private = function () {
     function Private() {
         classCallCheck(this, Private);
@@ -765,11 +765,6 @@ var vtexWishlistMethods = {
          */
         this.options = this.globalHelpers.extend({}, DEFAULTS, this.globalHelpers.isPlainObject(options) && options);
 
-        // Validate store name
-        if (!this.options.storeName || !this.globalHelpers.isString(this.options.storeName)) {
-            throw new Error(CONSTANTS.MESSAGES.storeName);
-        }
-
         // Validate shelf id
         if (!this.options.shelfId || !this.globalHelpers.isString(this.options.shelfId)) {
             throw new Error(CONSTANTS.MESSAGES.shelfId);
@@ -786,11 +781,6 @@ var vtexWishlistMethods = {
 
             this.options.notFound.call(this);
         }
-
-        /**
-         * Set Masterdata Store Name
-         */
-        this.vtexMasterdata.setStore(this.options.storeName);
 
         _private._setInstance(this);
         this._initWishlist();
@@ -853,13 +843,7 @@ var vtexWishlistMethods = {
     }
 };
 
-/**
- * Create a VtexWishlist class
- * Vtex utilities methods
- */
-
-var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog) {
-  var catalogCache = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, vtexCatalog) {
   classCallCheck(this, VtexWishlist);
 
   /**
@@ -874,17 +858,17 @@ var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog)
    */
   this.name = '@VtexWishlist';
 
-  // Validate VtexUtils.js
+  // Validate Vtex Libs
   if (vtexUtils === undefined) {
     throw new TypeError(CONSTANTS.MESSAGES.vtexUtils);
   }
 
-  if (vtexUtils.name !== '@VtexUtils') {
-    throw new TypeError(CONSTANTS.MESSAGES.vtexUtils);
+  if (vtexCatalog === undefined) {
+    throw new TypeError(CONSTANTS.MESSAGES.vtexCatalog);
   }
 
-  if (vtexUtils.version < CONSTANTS.MESSAGES.vtexUtilsVersion) {
-    throw new Error(CONSTANTS.MESSAGES.vtexUtilsVersionMessage);
+  if (vtexMasterdata === undefined) {
+    throw new Error(CONSTANTS.MESSAGES.vtexMasterdata);
   }
 
   /**
@@ -899,11 +883,6 @@ var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog)
    */
   this.vtexHelpers = vtexUtils.vtexHelpers;
 
-  // Validate VtexMasterdata.js
-  if (vtexMasterdata === undefined) {
-    throw new Error(CONSTANTS.MESSAGES.vtexMasterdata);
-  }
-
   /**
    * Vtex Masterdata instance
    * @type {VtexMasterdata}
@@ -914,7 +893,22 @@ var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, VtexCatalog)
    * Vtex Catalog instance
    * @type {VtexCatalog}
    */
-  this.vtexCatalog = new VtexCatalog(vtexUtils, catalogCache);
+  this.vtexCatalog = vtexCatalog;
+
+  /**
+   * Validate Vtex Libs instances
+   */
+  if (this.vtexCatalog.name !== '@VtexCatalog') {
+    throw new TypeError(CONSTANTS.MESSAGES.vtexCatalog);
+  }
+
+  if (this.vtexCatalog.version < CONSTANTS.MESSAGES.vtexCatalogVersion) {
+    throw new Error(CONSTANTS.MESSAGES.vtexCatalogVersionMessage);
+  }
+
+  if (this.vtexMasterdata.name !== '@VtexMasterdata') {
+    throw new TypeError(CONSTANTS.MESSAGES.vtexMasterdata);
+  }
 
   /**
    * Local/Session Storage

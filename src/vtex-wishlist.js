@@ -7,7 +7,7 @@ import vtexWishlistMethods from './vtex-wishlist.methods.js';
  * Vtex utilities methods
  */
 class VtexWishlist {
-    constructor(vtexUtils, vtexMasterdata, VtexCatalog, catalogCache = false) {
+    constructor(vtexUtils, vtexMasterdata, vtexCatalog) {
         /**
          * Version
          * @type {String}
@@ -20,17 +20,17 @@ class VtexWishlist {
          */
         this.name = '@VtexWishlist';
 
-        // Validate VtexUtils.js
+        // Validate Vtex Libs
         if ( vtexUtils === undefined ) {
             throw new TypeError(CONSTANTS.MESSAGES.vtexUtils);
         }
 
-        if ( vtexUtils.name !== '@VtexUtils' ) {
-            throw new TypeError(CONSTANTS.MESSAGES.vtexUtils);
+        if ( vtexCatalog === undefined ) {
+            throw new TypeError(CONSTANTS.MESSAGES.vtexCatalog);
         }
 
-        if ( vtexUtils.version < CONSTANTS.MESSAGES.vtexUtilsVersion ) {
-            throw new Error(CONSTANTS.MESSAGES.vtexUtilsVersionMessage);
+        if ( vtexMasterdata === undefined ) {
+            throw new Error(CONSTANTS.MESSAGES.vtexMasterdata);
         }
 
         /**
@@ -45,11 +45,6 @@ class VtexWishlist {
          */
         this.vtexHelpers = vtexUtils.vtexHelpers;
 
-        // Validate VtexMasterdata.js
-        if ( vtexMasterdata === undefined ) {
-            throw new Error(CONSTANTS.MESSAGES.vtexMasterdata);
-        }
-
         /**
          * Vtex Masterdata instance
          * @type {VtexMasterdata}
@@ -60,7 +55,22 @@ class VtexWishlist {
          * Vtex Catalog instance
          * @type {VtexCatalog}
          */
-        this.vtexCatalog = new VtexCatalog(vtexUtils, catalogCache);
+        this.vtexCatalog = vtexCatalog;
+
+        /**
+         * Validate Vtex Libs instances
+         */
+        if ( this.vtexCatalog.name !== '@VtexCatalog' ) {
+            throw new TypeError(CONSTANTS.MESSAGES.vtexCatalog);
+        }
+
+        if ( this.vtexCatalog.version < CONSTANTS.MESSAGES.vtexCatalogVersion ) {
+            throw new Error(CONSTANTS.MESSAGES.vtexCatalogVersionMessage);
+        }
+
+        if ( this.vtexMasterdata.name !== '@VtexMasterdata' ) {
+            throw new TypeError(CONSTANTS.MESSAGES.vtexMasterdata);
+        }
 
         /**
          * Local/Session Storage
