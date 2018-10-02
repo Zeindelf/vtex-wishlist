@@ -57,12 +57,13 @@ class Private {
     _setWishlistProduct() {
         const setData = (ev) => {
             ev.preventDefault();
+            ev.stopPropagation();
 
             if ( !this._validateUser() ) {
                 return false;
             }
 
-            const $this = $(ev.currentTarget);
+            const $this = $(ev.target);
             const productId = $this.data('wishlistProductId');
 
             $this.addClass(this._self.options.loaderClass);
@@ -162,6 +163,7 @@ class Private {
     _clearWishlist() {
         $(document).on('click', '[data-wishlist-clear]', (ev) => {
             ev.preventDefault();
+            ev.stopPropagation();
             this._clear();
         });
     }

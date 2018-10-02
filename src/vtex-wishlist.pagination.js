@@ -37,9 +37,10 @@ export default {
 
         $(document).on('click', '[data-wishlist-load-more-btn]', (ev) => {
             ev.preventDefault();
+            ev.stopPropagation();
 
             const storeVal = this._storage.get(CONSTANTS.STORAGE_NAME);
-            const $this = $(ev.currentTarget);
+            const $this = $(ev.target);
             const page = $this.data('wishlistPage');
             const newPage = page + 1;
 

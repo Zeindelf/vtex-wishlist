@@ -72,8 +72,9 @@ export default {
 
         $wishlistOrderBy.find('input').on('change', (ev) => {
             ev.preventDefault();
+            ev.stopPropagation();
 
-            const $this = $(ev.currentTarget);
+            const $this = $(ev.target);
             const value = $this.val();
 
             $(document).trigger(CONSTANTS.EVENTS.BEFORE_ORDER_BY_ITEMS);

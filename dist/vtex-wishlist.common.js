@@ -6,7 +6,7 @@
  * Copyright (c) 2017-2018 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-05-28T19:25:55.901Z
+ * Date: 2018-10-02T23:04:44.090Z
  */
 
 'use strict';
@@ -155,8 +155,9 @@ var renderProducts = {
 
         $wishlistOrderBy.find('input').on('change', function (ev) {
             ev.preventDefault();
+            ev.stopPropagation();
 
-            var $this = $(ev.currentTarget);
+            var $this = $(ev.target);
             var value = $this.val();
 
             $(document).trigger(CONSTANTS.EVENTS.BEFORE_ORDER_BY_ITEMS);
@@ -265,9 +266,10 @@ var pagination = {
 
         $(document).on('click', '[data-wishlist-load-more-btn]', function (ev) {
             ev.preventDefault();
+            ev.stopPropagation();
 
             var storeVal = _this._storage.get(CONSTANTS.STORAGE_NAME);
-            var $this = $(ev.currentTarget);
+            var $this = $(ev.target);
             var page = $this.data('wishlistPage');
             var newPage = page + 1;
 
@@ -413,12 +415,13 @@ var Private = function () {
 
             var setData = function setData(ev) {
                 ev.preventDefault();
+                ev.stopPropagation();
 
                 if (!_this._validateUser()) {
                     return false;
                 }
 
-                var $this = $(ev.currentTarget);
+                var $this = $(ev.target);
                 var productId = $this.data('wishlistProductId');
 
                 $this.addClass(_this._self.options.loaderClass);
@@ -541,6 +544,7 @@ var Private = function () {
 
             $(document).on('click', '[data-wishlist-clear]', function (ev) {
                 ev.preventDefault();
+                ev.stopPropagation();
                 _this4._clear();
             });
         }
