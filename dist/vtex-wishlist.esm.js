@@ -1,12 +1,12 @@
 
 /*!!
- * VtexWishlist.js v0.6.0
+ * VtexWishlist.js v0.6.1
  * https://github.com/zeindelf/vtex-wishlist
  *
  * Copyright (c) 2017-2018 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-10-02T23:04:44.090Z
+ * Date: 2018-10-02T23:07:39.195Z
  */
 
 var vtexCatalogVersion = '1.0.0';
@@ -854,7 +854,7 @@ var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, vtexCatalog)
    * Version
    * @type {String}
    */
-  this.version = '0.6.0';
+  this.version = '0.6.1';
 
   /**
    * Package name
