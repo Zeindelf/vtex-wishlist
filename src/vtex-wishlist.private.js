@@ -99,7 +99,7 @@ class Private {
             storeVal.productsId.push(productId);
             this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
 
-            this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: JSON.stringify(storeVal.productsId)})
+            this._vtexMasterdata.insertUpdateUser(storeVal.userEmail, {wishlistProducts: JSON.stringify(storeVal.productsId)})
                 .done((res) => {
                     if ( !this._globalHelpers.isNull($context) ) {
                         $context.addClass(this._self.options.activeClass);
@@ -129,7 +129,7 @@ class Private {
         $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_START, [productId]);
 
         if ( isProductAdded ) {
-            this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: JSON.stringify(filteredProducts)})
+            this._vtexMasterdata.insertUpdateUser(storeVal.userEmail, {wishlistProducts: JSON.stringify(filteredProducts)})
                 .done((res) => {
                     if ( !this._globalHelpers.isNull($context) ) {
                         $context.removeClass(this._self.options.activeClass);
@@ -182,7 +182,7 @@ class Private {
         storeVal.productsId = [];
         this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
 
-        this._vtexMasterdata.updateUser(storeVal.userEmail, {wishlistProducts: '[]'})
+        this._vtexMasterdata.insertUpdateUser(storeVal.userEmail, {wishlistProducts: '[]'})
             .done((res) => {
                 $wishlistAdd.map((index, wishlistVal) => $(wishlistVal).removeClass(this._self.options.activeClass));
                 this._update();

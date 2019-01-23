@@ -1,12 +1,12 @@
 
 /*!!
- * VtexWishlist.js v0.6.1
+ * VtexWishlist.js v0.6.2
  * https://github.com/zeindelf/vtex-wishlist
  *
- * Copyright (c) 2017-2018 Zeindelf
+ * Copyright (c) 2017-2019 Zeindelf
  * Released under the MIT license
  *
- * Date: 2018-10-02T23:07:39.195Z
+ * Date: 2019-01-23T15:57:25.429Z
  */
 
 (function (global, factory) {
@@ -470,7 +470,7 @@ var Private = function () {
                 storeVal.productsId.push(productId);
                 this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
 
-                this._vtexMasterdata.updateUser(storeVal.userEmail, { wishlistProducts: JSON.stringify(storeVal.productsId) }).done(function (res) {
+                this._vtexMasterdata.insertUpdateUser(storeVal.userEmail, { wishlistProducts: JSON.stringify(storeVal.productsId) }).done(function (res) {
                     if (!_this2._globalHelpers.isNull($context)) {
                         $context.addClass(_this2._self.options.activeClass);
                         $context.attr('title', _this2._self.options.linkTitle.remove);
@@ -510,7 +510,7 @@ var Private = function () {
             $(document).trigger(CONSTANTS.EVENTS.REQUEST_REMOVE_START, [productId]);
 
             if (isProductAdded) {
-                this._vtexMasterdata.updateUser(storeVal.userEmail, { wishlistProducts: JSON.stringify(filteredProducts) }).done(function (res) {
+                this._vtexMasterdata.insertUpdateUser(storeVal.userEmail, { wishlistProducts: JSON.stringify(filteredProducts) }).done(function (res) {
                     if (!_this3._globalHelpers.isNull($context)) {
                         $context.removeClass(_this3._self.options.activeClass);
                         $context.attr('title', _this3._self.options.linkTitle.add);
@@ -570,7 +570,7 @@ var Private = function () {
             storeVal.productsId = [];
             this._storage.set(CONSTANTS.STORAGE_NAME, storeVal, CONSTANTS.EXPIRE_TIME);
 
-            this._vtexMasterdata.updateUser(storeVal.userEmail, { wishlistProducts: '[]' }).done(function (res) {
+            this._vtexMasterdata.insertUpdateUser(storeVal.userEmail, { wishlistProducts: '[]' }).done(function (res) {
                 $wishlistAdd.map(function (index, wishlistVal) {
                     return $(wishlistVal).removeClass(_this5._self.options.activeClass);
                 });
@@ -860,7 +860,7 @@ var VtexWishlist = function VtexWishlist(vtexUtils, vtexMasterdata, vtexCatalog)
    * Version
    * @type {String}
    */
-  this.version = '0.6.1';
+  this.version = '0.6.2';
 
   /**
    * Package name
